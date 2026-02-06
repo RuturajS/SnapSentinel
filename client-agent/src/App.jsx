@@ -12,6 +12,7 @@ function App() {
     const [status, setStatus] = useState('Initializing...');
     const [intervalMs, setIntervalMs] = useState(300000); // 5 minutes default
     const [lastCapture, setLastCapture] = useState(null);
+    const captureRef = useRef(null);
 
     useEffect(() => {
         // 1. Identity
@@ -41,9 +42,10 @@ function App() {
         socket.on('command', (data) => {
             console.log('Received command:', data);
             if (data.command === 'capture') {
-                captureAndUpload();
+                if (captureRef.current) captureRef.current();
             } else if (data.command === 'set_interval') {
-                setIntervalMs(data.payload.interval);
+                console.log('Setting interval to:', data.payload.interval);
+                setIntervalMs(Number(data.payload.interval));
             }
         });
 
@@ -73,6 +75,8 @@ function App() {
             console.error('Upload failed', err);
         }
     }, [clientId]);
+
+    useEffect(() => { captureRef.current = captureAndUpload; }, [captureAndUpload]);
 
     // Interval Capture
     useEffect(() => {
